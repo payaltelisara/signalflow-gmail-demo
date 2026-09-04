@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SignalFlow — Gmail trigger demo</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #0d1020; color: #edf1ff; }
+      * { box-sizing: border-box; } body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, #29366a 0, transparent 36rem), #0d1020; }
+      main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 64px 0; } .eyebrow { color: #aebfff; font-size: .78rem; font-weight: 700; letter-spacing: .14em; } h1 { max-width: 720px; margin: 12px 0; font-size: clamp(2.2rem, 6vw, 4.5rem); line-height: 1; letter-spacing: -.06em; } .lede { max-width: 660px; color: #b9c1d7; font-size: 1.05rem; line-height: 1.6; }
+      .grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 22px; margin-top: 40px; } .card { padding: 28px; border: 1px solid #303a5d; border-radius: 18px; background: rgba(20, 25, 46, .84); box-shadow: 0 18px 70px rgba(0,0,0,.2); } h2 { margin: 0 0 8px; font-size: 1.2rem; } .hint, small { color: #9ba6c5; line-height: 1.45; }
+      label { display: grid; gap: 8px; margin-top: 18px; color: #cfd7ef; font-size: .86rem; font-weight: 650; } input, textarea { width: 100%; padding: 12px 14px; border: 1px solid #3d496f; border-radius: 10px; background: #11172b; color: #fff; font: inherit; } textarea { min-height: 130px; resize: vertical; } button { margin-top: 22px; padding: 13px 17px; border: 0; border-radius: 10px; background: #b7ff6f; color: #112000; font: 750 .95rem inherit; cursor: pointer; } button:disabled { cursor: wait; opacity: .65; }
+      .status { display: inline-flex; align-items: center; gap: 7px; margin: 18px 0 4px; padding: 6px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; } .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; } .ready { background: #173d34; color: #8ff5ca; } .setup { background: #3c2c18; color: #ffd07f; } .activity { list-style: none; padding: 0; margin: 18px 0 0; } .activity li { padding: 13px 0; border-top: 1px solid #303a5d; color: #cad2e8; font-size: .9rem; } .activity span { display: block; margin-top: 5px; color: #909cbc; font-size: .77rem; } #message { min-height: 24px; margin: 16px 0 0; color: #aebfff; } .error { color: #ff9f9f !important; }
+      @media (max-width: 760px) { main { padding: 40px 0; } .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">SIGNALFLOW / GMAIL CAMPAIGN DEMO</div>
+      <h1>One message. A deliberate trigger.</h1>
+      <p class="lede">A minimal campaign launcher for showcasing Gmail SMTP delivery. It keeps campaign activity only in memory and requires the owner token before an email can be sent.</p>
+      <div class="grid">
+        <section class="card">
+          <h2>Trigger campaign</h2>
+          <p class="hint">Use one recipient per line. Limit: 20 recipients per trigger.</p>
+          <form id="campaign-form">
+            <label>Recipients<textarea id="recipients" required placeholder="person@example.com&#10;another@example.com"></textarea></label>
+            <label>Subject<input id="subject" required maxlength="180" placeholder="A short, relevant subject" /></label>
+            <label>Message<textarea id="body" required placeholder="Write the email you want Gmail to send."></textarea></label>
+            <label>Owner token<input id="token" required type="password" autocomplete="off" placeholder="Required only to send" /></label>
+            <button id="send" type="submit">Trigger Gmail email</button>
+          </form>
+          <p id="message" aria-live="polite"></p>
+        </section>
+        <aside class="card">
+          <h2>Delivery status</h2>
+          <div id="status" class="status setup">Checking configuration</div>
+          <p id="sender" class="hint"></p>
+          <h2 style="margin-top: 30px">This session</h2>
+          <ul id="activity" class="activity"><li>Nothing triggered yet.</li></ul>
+          <small>Gmail acceptance is not proof of inbox delivery. This demo does not persist recipients, messages, or activity after a restart.</small>
+        </aside>
+      </div>
+    </main>
+    <script>
+      const status = document.querySelector('#status'), sender = document.querySelector('#sender'), activity = document.querySelector('#activity'), message = document.querySelector('#message'), form = document.querySelector('#campaign-form'), send = document.querySelector('#send');
+      const render = (data) => { status.className = `status ${data.configured ? 'ready' : 'setup'}`; status.textContent = data.configured ? (data.dry_run ? 'Dry-run mode' : 'Gmail ready') : 'Gmail setup required'; sender.textContent = data.configured ? `Sender: ${data.sender}` : 'Set SMTP and owner-token environment variables before sending.'; activity.innerHTML = data.activity.length ? data.activity.map(item => `<li>${item.status}: ${item.recipients} recipient(s)<span>${item.subject} · ${item.timestamp}</span></li>`).join('') : '<li>Nothing triggered yet.</li>'; };
+      async function refresh() { render(await (await fetch('/api/status')).json()); }
+      form.addEventListener('submit', async (event) => { event.preventDefault(); send.disabled = true; message.className = ''; message.textContent = 'Triggering Gmail…'; const recipients = document.querySelector('#recipients').value.split(/[\n,]/).filter(Boolean); const response = await fetch('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': document.querySelector('#token').value }, body: JSON.stringify({ recipients, subject: document.querySelector('#subject').value, body: document.querySelector('#body').value }) }); const result = await response.json(); message.className = response.ok ? '' : 'error'; message.textContent = response.ok ? result.message : result.detail || 'Could not trigger Gmail.'; send.disabled = false; if (response.ok) { document.querySelector('#token').value = ''; await refresh(); } });
+      refresh().catch(() => { status.textContent = 'Service unavailable'; });
+    </script>
+  </body>
+</html>
