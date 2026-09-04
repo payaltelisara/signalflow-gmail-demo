@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Interactive SignalFlow revenue operations dashboard demo." />
+    <title>SignalFlow | Live product demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="dashboard-redesign.css" />
+    <style>.home-link{display:inline-flex;align-items:center;text-decoration:none}.header-actions .secondary-btn{height:38px}@media(max-width:700px){.home-link{display:none}}</style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="index.html" aria-label="SignalFlow home"><span class="brand-mark">S</span><span>SignalFlow</span></a>
+      <div class="workspace"><span class="avatar">NH</span><span>Northstar Health</span><span class="chevron">⌄</span></div>
+      <nav>
+        <a class="nav-item active" href="#overview"><span>⊞</span> Overview</a>
+        <a class="nav-item" href="#leads"><span>◉</span> Leads <b>12</b></a>
+        <a class="nav-item" href="#pipeline"><span>◫</span> Pipeline</a>
+        <a class="nav-item" href="#sequences"><span>↗</span> Sequences</a>
+        <a class="nav-item" href="#insights"><span>⌁</span> Insights</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="integration"><i class="green-dot"></i> All systems operational</div>
+        <a class="nav-item" href="#settings"><span>⚙</span> Settings</a>
+        <div class="user"><span class="avatar user-avatar">AK</span><span><strong>Akash Kumar</strong><small>Revenue admin</small></span><span>⋮</span></div>
+      </div>
+    </aside>
+    <main>
+      <header><div><p class="eyebrow">Monday, August 24</p><h1>Good morning, Akash.</h1><p class="subhead">Here is what needs attention in your pipeline.</p></div><div class="header-actions"><a class="secondary-btn home-link" href="index.html">← Product site</a><button class="icon-btn" aria-label="Notifications">♢<i></i></button><button class="primary-btn" id="newLead">+ Add lead</button></div></header>
+      <section class="metrics" aria-label="Revenue metrics">
+        <article><div class="metric-label">New leads <span class="trend up">↑ 18.4%</span></div><strong>128</strong><p>vs. 108 last week</p><div class="spark teal"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
+        <article><div class="metric-label">Qualified leads <span class="trend up">↑ 7.2%</span></div><strong>46</strong><p>35.9% qualification rate</p><div class="spark purple"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
+        <article><div class="metric-label">Meetings booked <span class="trend up">↑ 12.0%</span></div><strong>19</strong><p>14 this time last week</p><div class="spark coral"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
+        <article><div class="metric-label">Pipeline influenced <span class="trend up">↑ 9.1%</span></div><strong>$84.2k</strong><p>Across 31 open opportunities</p><div class="spark blue"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
+      </section>
+      <section class="content-grid">
+        <section class="panel lead-panel" id="leads"><div class="panel-heading"><div><h2>Priority leads</h2><p>Sorted by fit and buying intent</p></div><button class="text-btn">View all <span>→</span></button></div><div class="lead-filters"><button class="filter active" data-filter="all">All <span>12</span></button><button class="filter" data-filter="needs">Needs action <span>4</span></button><button class="filter" data-filter="hot">High intent <span>3</span></button></div><div class="lead-list" id="leadList"></div></section>
+        <aside class="right-column">
+          <section class="panel activity"><div class="panel-heading"><div><h2>Live activity</h2><p>Events from the last 2 hours</p></div><span class="live"><i></i> Live</span></div><div id="activityList"></div></section>
+          <section class="panel sources"><div class="panel-heading"><div><h2>Lead sources</h2><button class="text-btn">Report →</button></div></div><div class="source-chart"><div class="donut"><span>128<small>leads</small></span></div><div class="legend"><p><i class="dot teal-dot"></i>Website <b>42%</b></p><p><i class="dot purple-dot"></i>Outbound <b>28%</b></p><p><i class="dot coral-dot"></i>Partners <b>18%</b></p><p><i class="dot gray-dot"></i>Other <b>12%</b></p></div></div></section>
+        </aside>
+      </section>
+    </main>
+    <dialog id="leadDialog"><form method="dialog"><button class="dialog-close">×</button><p class="eyebrow">Lead details</p><div id="dialogContent"></div><menu><button value="cancel" class="secondary-btn">Close</button><button value="default" class="primary-btn" id="advanceLead">Advance stage</button></menu></form></dialog>
+    <div class="toast" id="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

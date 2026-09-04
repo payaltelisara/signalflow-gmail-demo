@@ -1,0 +1,46 @@
+:root {
+  --ink: #15231e;
+  --muted: #6c7d76;
+  --line: #d8ded9;
+  --canvas: #f1f0ea;
+  --teal: #087967;
+  --teal-soft: #dcefe8;
+  --purple: #7464d0;
+  --coral: #d87c61;
+  --blue: #4b91c7;
+}
+body { background: var(--canvas); font-family: "Instrument Sans", Arial, sans-serif; }
+.sidebar { width: 238px; padding: 23px 12px; border-color: var(--line); background: #faf9f5; }
+.brand { font-family: "Instrument Sans", sans-serif; font-size: 18px; }
+.brand-mark { border-radius: 4px; background: #0a211a; color: #d5f45f; font-family: "Newsreader", Georgia, serif; }
+.workspace, .nav-item { border-radius: 4px; }
+.nav-item.active { background: #dcefe8; color: #086f60; }
+main { margin-left: 238px; padding: 47px 50px; }
+header h1 { font-family: "Newsreader", Georgia, serif; font-size: 31px; font-weight: 500; letter-spacing: -.04em; }
+.eyebrow, .trend, .score, .event time, .live { font-family: "IBM Plex Mono", monospace; }
+.primary-btn, .secondary-btn, .icon-btn { border-radius: 4px; font-family: "Instrument Sans", sans-serif; }
+.primary-btn { background: #087967; }
+.metrics article, .panel { border-radius: 6px; border-color: var(--line); box-shadow: none; }
+.metrics article { min-height: 148px; background: #faf9f5; }
+.metrics strong { font-family: "Newsreader", Georgia, serif; font-size: 31px; font-weight: 500; }
+.content-grid { gap: 13px; }
+.panel { background: #faf9f5; }
+.panel h2 { font-family: "Newsreader", Georgia, serif; font-size: 18px; font-weight: 500; }
+.filter, .text-btn { font-family: "Instrument Sans", sans-serif; }
+.lead-row { transition: background .18s ease, padding .18s ease; }
+.lead-row:hover { padding-left: 8px; background: #eef2ed; }
+.score, .live, .trend { border-radius: 3px; }
+.donut::after { background: #faf9f5; }
+dialog { border-radius: 8px; font-family: "Instrument Sans", sans-serif; }
+#dialogContent h2 { font-family: "Newsreader", Georgia, serif; font-size: 27px; font-weight: 500; }
+.toast { border-radius: 4px; background: #0a211a; }
+a:focus-visible, button:focus-visible { outline: 3px solid #d5f45f; outline-offset: 3px; }
+@media (max-width: 700px) {
+  main { margin-left: 0; padding: 24px 16px; }
+  header h1 { font-size: 28px; }
+  .metrics { gap: 8px; }
+  .metrics article { min-height: 124px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; }
+}

@@ -3,51 +3,212 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SignalFlow — Gmail trigger demo</title>
-    <style>
-      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #0d1020; color: #edf1ff; }
-      * { box-sizing: border-box; } body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, #29366a 0, transparent 36rem), #0d1020; }
-      main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 64px 0; } .eyebrow { color: #aebfff; font-size: .78rem; font-weight: 700; letter-spacing: .14em; } h1 { max-width: 720px; margin: 12px 0; font-size: clamp(2.2rem, 6vw, 4.5rem); line-height: 1; letter-spacing: -.06em; } .lede { max-width: 660px; color: #b9c1d7; font-size: 1.05rem; line-height: 1.6; }
-      .grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 22px; margin-top: 40px; } .card { padding: 28px; border: 1px solid #303a5d; border-radius: 18px; background: rgba(20, 25, 46, .84); box-shadow: 0 18px 70px rgba(0,0,0,.2); } h2 { margin: 0 0 8px; font-size: 1.2rem; } .hint, small { color: #9ba6c5; line-height: 1.45; }
-      label { display: grid; gap: 8px; margin-top: 18px; color: #cfd7ef; font-size: .86rem; font-weight: 650; } input, textarea { width: 100%; padding: 12px 14px; border: 1px solid #3d496f; border-radius: 10px; background: #11172b; color: #fff; font: inherit; } textarea { min-height: 130px; resize: vertical; } button { margin-top: 22px; padding: 13px 17px; border: 0; border-radius: 10px; background: #b7ff6f; color: #112000; font: 750 .95rem inherit; cursor: pointer; } button:disabled { cursor: wait; opacity: .65; }
-      .status { display: inline-flex; align-items: center; gap: 7px; margin: 18px 0 4px; padding: 6px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; } .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; } .ready { background: #173d34; color: #8ff5ca; } .setup { background: #3c2c18; color: #ffd07f; } .activity { list-style: none; padding: 0; margin: 18px 0 0; } .activity li { padding: 13px 0; border-top: 1px solid #303a5d; color: #cad2e8; font-size: .9rem; } .activity span { display: block; margin-top: 5px; color: #909cbc; font-size: .77rem; } #message { min-height: 24px; margin: 16px 0 0; color: #aebfff; } .error { color: #ff9f9f !important; }
-      @media (max-width: 760px) { main { padding: 40px 0; } .grid { grid-template-columns: 1fr; } }
-    </style>
+    <meta name="description" content="SignalFlow designs and builds reliable GTM workflows for B2B teams, from inbound routing and enrichment to signal-based outbound and CRM automation." />
+    <meta property="og:title" content="SignalFlow | Revenue systems, engineered." />
+    <meta property="og:description" content="Reliable workflows from buying signal to pipeline." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SignalFlow | Revenue systems, engineered." />
+    <meta name="twitter:description" content="Reliable workflows from buying signal to pipeline." />
+    <title>SignalFlow | Revenue systems, engineered.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="landing.css" />
+    <link rel="stylesheet" href="landing-sections.css" />
+    <link rel="stylesheet" href="services-sections.css" />
+    <link rel="stylesheet" href="design-system.css" />
   </head>
   <body>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a class="site-brand" href="index.html"><span class="site-brand-mark">S</span><span>SignalFlow</span></a>
+      <div class="nav-links"><a href="#services">Services</a><a href="#work">Proof of work</a><a href="#process">Process</a><a href="#build">Engineering</a></div>
+      <a class="button button-small" href="#contact">Discuss a workflow <span>↘</span></a>
+    </nav>
     <main>
-      <div class="eyebrow">SIGNALFLOW / GMAIL CAMPAIGN DEMO</div>
-      <h1>One message. A deliberate trigger.</h1>
-      <p class="lede">A minimal campaign launcher for showcasing Gmail SMTP delivery. It keeps campaign activity only in memory and requires the owner token before an email can be sent.</p>
-      <div class="grid">
-        <section class="card">
-          <h2>Trigger campaign</h2>
-          <p class="hint">Use one recipient per line. Limit: 20 recipients per trigger.</p>
-          <form id="campaign-form">
-            <label>Recipients<textarea id="recipients" required placeholder="person@example.com&#10;another@example.com"></textarea></label>
-            <label>Subject<input id="subject" required maxlength="180" placeholder="A short, relevant subject" /></label>
-            <label>Message<textarea id="body" required placeholder="Write the email you want Gmail to send."></textarea></label>
-            <label>Owner token<input id="token" required type="password" autocomplete="off" placeholder="Required only to send" /></label>
-            <button id="send" type="submit">Trigger Gmail email</button>
-          </form>
-          <p id="message" aria-live="polite"></p>
-        </section>
-        <aside class="card">
-          <h2>Delivery status</h2>
-          <div id="status" class="status setup">Checking configuration</div>
-          <p id="sender" class="hint"></p>
-          <h2 style="margin-top: 30px">This session</h2>
-          <ul id="activity" class="activity"><li>Nothing triggered yet.</li></ul>
-          <small>Gmail acceptance is not proof of inbox delivery. This demo does not persist recipients, messages, or activity after a restart.</small>
-        </aside>
-      </div>
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="pill"><i></i> GTM engineering for B2B revenue teams</div>
+          <h1>Turn scattered GTM tools into one working revenue system.</h1>
+          <p>We design and build the workflows behind your pipeline: clean data, faster inbound response, signal-based outbound, reliable routing, and CRM visibility your team can trust.</p>
+          <div class="hero-actions"><a class="button" href="#services">Explore services <span>↓</span></a><a class="button button-ghost" href="dashboard.html">Open interactive demo <span>↗</span></a></div>
+          <div class="source-line"><span>One workflow for</span><b>Website forms</b><i></i><b>Cold replies</b><i></i><b>LinkedIn</b><i></i><b>Referrals</b><i></i><b>CSV</b></div>
+        </div>
+        <div class="product-stage" aria-label="SignalFlow dashboard preview">
+          <div class="stage-glow"></div>
+          <div class="mini-app">
+            <aside><div class="mini-logo"><span>S</span><b>SignalFlow</b></div><div class="mini-account">NH&nbsp;&nbsp; Northstar Health</div><ul><li class="selected">⊞ &nbsp; Overview</li><li>◉ &nbsp; Leads <small>12</small></li><li>◫ &nbsp; Pipeline</li><li>↗ &nbsp; Sequences</li><li>⌁ &nbsp; Insights</li></ul></aside>
+            <div class="mini-main"><div class="mini-top"><div><small>MONDAY, AUGUST 24</small><h2>Good morning, Akash.</h2><p>Here is what needs attention in your pipeline.</p></div><button>+ Add lead</button></div><div class="mini-metrics"><div><span>NEW LEADS</span><b>128</b><small>↑ 18.4%</small></div><div><span>QUALIFIED</span><b>46</b><small>35.9% rate</small></div><div><span>MEETINGS</span><b>19</b><small>↑ 12.0%</small></div></div><div class="mini-panels"><section><div class="mini-title"><b>Priority leads</b><small>VIEW ALL →</small></div><div class="mini-tabs">All &nbsp;&nbsp; Needs action &nbsp;&nbsp; High intent</div><div class="mini-lead"><i class="person lavender">MC</i><span><b>Maya Chen</b><small>VP, Revenue Operations</small></span><em>Lumen Health</em><strong>96 score</strong></div><div class="mini-lead"><i class="person blue-person">JB</i><span><b>Jordan Blake</b><small>Head of Growth</small></span><em>Orbitly</em><strong>91 score</strong></div><div class="mini-lead"><i class="person coral-person">SP</i><span><b>Sofia Patel</b><small>Director of Sales</small></span><em>NexaCloud</em><strong>87 score</strong></div></section><section class="mini-feed"><div class="mini-title"><b>Live activity</b><small class="on">● LIVE</small></div><p><i>↳</i><span><b>Maya Chen</b> submitted a demo request</span></p><p><i>✉</i><span><b>Jordan Blake</b> replied to a sequence</span></p><p><i>◫</i><span><b>Sofia Patel</b> moved to Qualified</span></p></section></div></div>
+          </div>
+          <div class="signal-card signal-one"><span>01</span><div><small>NEW SIGNAL</small><b>Demo requested</b><em>maya@lumenhealth.com</em></div><i>✓</i></div>
+          <div class="signal-card signal-two"><span>96</span><div><small>QUALIFICATION</small><b>High-fit lead</b><em>Routed to Priya Shah</em></div><i>→</i></div>
+        </div>
+      </section>
+      <section class="promise-band" aria-label="SignalFlow outcomes">
+        <div><span>01</span><p><b>Respond while intent is fresh</b><small>Capture every signal as it arrives, without waiting for a manual import.</small></p></div>
+        <div><span>02</span><p><b>Qualify every lead the same way</b><small>Apply your ICP and engagement rules consistently across every channel.</small></p></div>
+        <div><span>03</span><p><b>Give reps a focused queue</b><small>Route qualified leads by territory, segment, and current workload.</small></p></div>
+      </section>
+
+      <section class="section problem-section" id="problems">
+        <div class="section-heading split-heading">
+          <div><p class="kicker">Where revenue workflows break</p><h2>Your team has the tools. The handoffs are the problem.</h2></div>
+          <p>Forms, data vendors, inboxes, CRMs, and sequencing tools each do one part of the job. Revenue leaks appear in the gaps between them.</p>
+        </div>
+        <div class="problem-grid">
+          <article><span>01</span><h3>High-intent leads wait</h3><p>A demo request reaches the CRM, but research, qualification, and ownership still happen manually.</p><small>Response delay</small></article>
+          <article><span>02</span><h3>Reps rebuild context</h3><p>Salespeople cross-check company data, LinkedIn, and old CRM records before deciding whether to engage.</p><small>Research overhead</small></article>
+          <article><span>03</span><h3>Ownership is inconsistent</h3><p>Territory and segment rules live in people's heads, producing uneven workloads and unclear accountability.</p><small>Routing risk</small></article>
+          <article><span>04</span><h3>Automation fails silently</h3><p>A changed field, expired token, or duplicate webhook breaks the flow without a useful audit trail.</p><small>Pipeline blind spot</small></article>
+        </div>
+      </section>
+
+      <section class="section services-section" id="services">
+        <div class="section-heading split-heading">
+          <div><p class="kicker">What we build</p><h2>Focused systems for the work slowing revenue teams down.</h2></div>
+          <p>Each engagement starts with a workflow and measurable operating problem. Tools follow the design, not the other way around.</p>
+        </div>
+        <div class="service-list">
+          <article><span class="service-index">01</span><div><h3>Inbound lead automation</h3><p>Capture, enrich, score, route, schedule, and follow up while buyer intent is fresh.</p></div><ul><li>Form and webhook intake</li><li>ICP and engagement scoring</li><li>Territory and workload routing</li></ul><i>↳</i></article>
+          <article><span class="service-index">02</span><div><h3>Signal-based outbound</h3><p>Turn relevant account events into timely, researched outreach instead of broad list sends.</p></div><ul><li>Hiring and funding signals</li><li>Website and engagement intent</li><li>Personalized sequence triggers</li></ul><i>⌁</i></article>
+          <article><span class="service-index">03</span><div><h3>Lead sourcing and enrichment</h3><p>Build usable contact and account data with validation, waterfall enrichment, and ICP filters.</p></div><ul><li>Multi-provider enrichment</li><li>Email and identity validation</li><li>Deduplication and merge rules</li></ul><i>＋</i></article>
+          <article><span class="service-index">04</span><div><h3>Cold-email infrastructure</h3><p>Set up the operational layer around domains, inboxes, sequencing, replies, and CRM synchronization.</p></div><ul><li>Deliverability controls</li><li>Sequence and reply workflows</li><li>Suppression and opt-out handling</li></ul><i>✉</i></article>
+          <article><span class="service-index">05</span><div><h3>CRM and RevOps engineering</h3><p>Make lifecycle stages, ownership, attribution, and reporting consistent enough to operate from.</p></div><ul><li>Data model and hygiene</li><li>Lifecycle automation</li><li>Attribution and dashboards</li></ul><i>◫</i></article>
+          <article><span class="service-index">06</span><div><h3>Custom GTM automation</h3><p>Build API, webhook, and AI-assisted workflows when standard connectors stop short.</p></div><ul><li>Custom integrations</li><li>Human review checkpoints</li><li>Monitoring and recovery</li></ul><i>⌘</i></article>
+        </div>
+      </section>
+
+      <section class="section workflow-section" id="workflow">
+        <div class="section-heading">
+          <p class="kicker">One connected workflow</p>
+          <h2>From scattered signals to a clear next step.</h2>
+          <p>SignalFlow keeps context attached as a lead moves from first touch to pipeline, so sales teams know who to contact, why they matter, and what happened next.</p>
+        </div>
+        <div class="workflow-rail" aria-label="Lead workflow">
+          <article><div class="workflow-icon">↳</div><span>01</span><h3>Capture</h3><p>Collect forms, replies, referrals, LinkedIn conversations, and imports in one intake.</p><small>lead.received</small></article>
+          <article><div class="workflow-icon">＋</div><span>02</span><h3>Enrich</h3><p>Add company, role, industry, size, and relevant intent context.</p><small>lead.enriched</small></article>
+          <article><div class="workflow-icon">◎</div><span>03</span><h3>Score</h3><p>Combine ICP fit with engagement to surface the leads worth acting on.</p><small>score.calculated</small></article>
+          <article><div class="workflow-icon">⌘</div><span>04</span><h3>Route</h3><p>Assign by territory, segment, named account rules, and rep capacity.</p><small>owner.assigned</small></article>
+          <article><div class="workflow-icon">✉</div><span>05</span><h3>Engage</h3><p>Start a personal follow-up and keep replies attached to the lead record.</p><small>sequence.started</small></article>
+          <article><div class="workflow-icon">✓</div><span>06</span><h3>Convert</h3><p>Track meetings, stage changes, and outcomes in one auditable timeline.</p><small>opportunity.created</small></article>
+        </div>
+      </section>
+
+      <section class="section transformation-section" id="work">
+        <div class="section-heading split-heading">
+          <div><p class="kicker">Before and after</p><h2>Replace a chain of manual decisions with an observable workflow.</h2></div>
+          <p>The improvement is operational: each step has an owner, a rule, an event, and a recovery path.</p>
+        </div>
+        <div class="comparison">
+          <article class="before-card"><div class="comparison-head"><span>Before</span><small>FRAGMENTED HANDOFFS</small></div><ol><li><b>Form submission</b><em>Waits in a shared inbox</em></li><li><b>Manual research</b><em>Rep checks three data sources</em></li><li><b>Spreadsheet score</b><em>Criteria differ by rep</em></li><li><b>Slack assignment</b><em>No load or territory check</em></li><li><b>CRM updated later</b><em>Source context is incomplete</em></li></ol></article>
+          <div class="comparison-shift"><span>→</span><small>ENGINEERED</small></div>
+          <article class="after-card"><div class="comparison-head"><span>After</span><small>EVENT-DRIVEN FLOW</small></div><ol><li><b>Validated intake</b><em>Signed, idempotent lead event</em></li><li><b>Async enrichment</b><em>Company and role context attached</em></li><li><b>Versioned scoring</b><em>ICP and intent rules recorded</em></li><li><b>Deterministic routing</b><em>Territory, segment, workload</em></li><li><b>Audited activation</b><em>Owner, outreach, and outcome visible</em></li></ol></article>
+        </div>
+
+        <article class="case-study">
+          <div class="case-label"><span>Reference implementation</span><small>SIMULATED DATA · INSPECTABLE BUILD</small></div>
+          <div class="case-intro"><p class="kicker">SignalFlow inbound orchestration</p><h2>A complete lead journey built to prove the system, not claim a client result.</h2><p>This portfolio implementation uses a fictional B2B workspace and sample leads. No customer, revenue, conversion, or performance claim is implied.</p><a class="inline-link dark-link" href="dashboard.html">Open the interactive demo <span>↗</span></a></div>
+          <div class="case-details">
+            <div><span>Context</span><p>A lean sales team receives leads from forms, cold-email replies, LinkedIn, referrals, and CSV imports.</p></div>
+            <div><span>Bottleneck modeled</span><p>Manual research, inconsistent qualification, unclear ownership, and incomplete event history.</p></div>
+            <div><span>System built</span><p>Unified intake, enrichment, scoring, routing, sequence activation, meeting tracking, and pipeline stages.</p></div>
+            <div><span>Technical decisions</span><p>Tenant scoping, idempotency keys, normalized identity, transactional outbox, signed webhooks, and immutable audit records.</p></div>
+            <div><span>How it is verified</span><p>Open a lead, inspect its event timeline, filter by intent, and advance the record through the simulated pipeline.</p></div>
+            <div><span>Evidence boundary</span><p>The workflow and interface are implemented. External providers are mocked; production outcomes remain unverified.</p></div>
+          </div>
+          <div class="artifact-strip"><span>POST /v1/leads</span><span>score v3</span><span>route.na.enterprise</span><span>webhook_inbox</span><span>lead.audit</span></div>
+        </article>
+      </section>
+
+      <section class="section value-section" id="value">
+        <div class="value-copy">
+          <p class="kicker light">Why SignalFlow</p>
+          <h2>Your best leads should not depend on who checked the spreadsheet first.</h2>
+          <p>Small sales teams lose time when lead intake, qualification, and ownership live in separate tools. SignalFlow turns those handoffs into one dependable operating flow.</p>
+          <a class="inline-link" href="dashboard.html">Open the interactive demo <span>→</span></a>
+        </div>
+        <div class="value-grid">
+          <article><span class="value-number">01</span><div><h3>Less manual handling</h3><p>Normalize incoming lead data, merge duplicates, and trigger the next step without copy-paste work.</p></div></article>
+          <article><span class="value-number">02</span><div><h3>Faster follow-up</h3><p>Route high-intent signals as events arrive, so qualified leads do not sit unseen in an inbox.</p></div></article>
+          <article><span class="value-number">03</span><div><h3>Fair, explainable routing</h3><p>Use versioned assignment rules and current workloads instead of informal rep selection.</p></div></article>
+          <article><span class="value-number">04</span><div><h3>One view of the pipeline</h3><p>Keep the source, score, owner, messages, meetings, and stage history on the same record.</p></div></article>
+        </div>
+      </section>
+
+      <section class="section proof-section" id="build">
+        <div class="section-heading proof-heading">
+          <div><p class="kicker">Engineering proof of work</p><h2>A product surface backed by real system design.</h2></div>
+          <p>This demo models the reliability boundaries a production lead platform needs. The UI is intentionally compact; the architecture underneath is the main engineering artifact.</p>
+        </div>
+        <div class="proof-layout">
+          <div class="proof-cards">
+            <article><span>API</span><h3>Safe lead ingestion</h3><p>Tenant-scoped endpoints validate source payloads, enforce rate limits, and replay the original response when an idempotency key is retried.</p><div><code>POST /v1/leads</code><code>429 aware</code></div></article>
+            <article><span>DATA</span><h3>Deterministic identity</h3><p>Normalized email and company domains detect duplicates. Merge events preserve provenance instead of silently replacing prior data.</p><div><code>unique index</code><code>lead.merged</code></div></article>
+            <article><span>EVENTS</span><h3>Reliable async work</h3><p>A transactional outbox commits domain events with lead changes. Idempotent workers handle enrichment, scoring, routing, and sequences.</p><div><code>at-least-once</code><code>retry safe</code></div></article>
+            <article><span>SECURITY</span><h3>Controlled access</h3><p>Multi-tenant RBAC scopes admins, managers, reps, and viewers. Signed webhooks and immutable audit entries protect important transitions.</p><div><code>HMAC verify</code><code>audit log</code></div></article>
+          </div>
+          <div class="architecture-card">
+            <div class="architecture-head"><span><i></i> SYSTEM FLOW</span><small>Event-driven · tenant aware</small></div>
+            <div class="architecture-body">
+              <div class="arch-row sources-row"><div>Website<small>form</small></div><div>Email<small>reply</small></div><div>Partners<small>referral</small></div><div>CSV<small>batch</small></div></div>
+              <div class="arch-connector"><i></i><span>signed requests + idempotency keys</span><i></i></div>
+              <div class="arch-core">Ingestion API <span>validate · normalize · deduplicate</span></div>
+              <div class="arch-split"><i></i><i></i><i></i></div>
+              <div class="arch-row workers-row"><div>Enrichment<small>worker</small></div><div>Scoring<small>worker</small></div><div>Routing<small>worker</small></div></div>
+              <div class="arch-decision"><span>score ≥ threshold?</span><b>yes → route</b><b>no → nurture</b></div>
+              <div class="arch-connector slim"><i></i><span>transactional outbox</span><i></i></div>
+              <div class="arch-store"><span>PostgreSQL</span><span>Event log</span><span>Webhook inbox</span></div>
+              <div class="failure-rail"><span>Failure path</span><b>retry with backoff</b><i>→</i><b>dead-letter queue</b><i>→</i><b>operator alert</b></div>
+              <div class="arch-foot"><span>RBAC</span><span>Rate limits</span><span>Audit trail</span><span>Retry policies</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section integrations-section" id="integrations">
+        <div class="section-heading split-heading">
+          <div><p class="kicker">Integration-ready</p><h2>Design around the stack you already operate.</h2></div>
+          <p>The reference build models these boundaries with local adapters. Production connections would be scoped and verified per provider.</p>
+        </div>
+        <div class="integration-groups">
+          <article><span>CRM</span><div><b>HubSpot</b><b>Salesforce</b></div><small>Mock adapters in reference build</small></article>
+          <article><span>DATA</span><div><b>Clay</b><b>Apollo</b><b>Enrichment APIs</b></div><small>Provider-agnostic enrichment interface</small></article>
+          <article><span>ENGAGEMENT</span><div><b>Smartlead</b><b>Instantly</b><b>HeyReach</b><b>Gmail</b></div><small>Sequence and reply event contracts</small></article>
+          <article><span>WORKFLOW</span><div><b>n8n</b><b>Make</b><b>Slack</b><b>Calendly</b></div><small>Webhook-driven orchestration points</small></article>
+        </div>
+        <p class="integration-note">Technology names describe compatible workflow boundaries, not official partnerships or active production connections.</p>
+      </section>
+
+      <section class="section process-section" id="process">
+        <div class="section-heading split-heading">
+          <div><p class="kicker">How an engagement works</p><h2>Diagnose the bottleneck before adding automation.</h2></div>
+          <p>A bounded process keeps the work tied to an operating outcome and leaves your team with a system it can understand.</p>
+        </div>
+        <div class="process-grid">
+          <article><span>Week 01</span><h3>Audit the workflow</h3><p>Map sources, data ownership, handoffs, failure points, baseline measures, and current tools.</p><small>Output: workflow map + prioritized brief</small></article>
+          <article><span>Week 02</span><h3>Design the system</h3><p>Define the data model, events, decision rules, integration contracts, and measurable acceptance criteria.</p><small>Output: build plan + architecture</small></article>
+          <article><span>Weeks 03–04</span><h3>Build and test</h3><p>Implement the smallest end-to-end flow, test retries and edge cases, then connect the remaining paths.</p><small>Output: working workflow + runbook</small></article>
+          <article><span>Ongoing</span><h3>Measure and improve</h3><p>Review adoption, exceptions, data quality, and funnel movement. Adjust rules using observed evidence.</p><small>Output: change log + next experiments</small></article>
+        </div>
+      </section>
+
+      <section class="section faq-section" id="faq">
+        <div class="faq-intro"><p class="kicker">Common questions</p><h2>What teams usually want to know.</h2><p>Clear scope is part of the engineering work. These answers set the boundaries before a build begins.</p></div>
+        <div class="faq-list">
+          <details><summary>Do we need to replace our current GTM tools?<span>＋</span></summary><p>Usually no. The first step is to identify where the current stack works and where handoffs fail. A new tool is justified only when the existing system cannot meet the workflow or reliability requirement.</p></details>
+          <details><summary>Can you work with a messy CRM?<span>＋</span></summary><p>Yes, but automation should not amplify bad data. We first define identity, ownership, lifecycle stages, merge rules, and the minimum cleanup required for the target workflow.</p></details>
+          <details><summary>How do you measure whether a workflow worked?<span>＋</span></summary><p>We agree on observable operating measures before implementation, such as time to assignment, research effort, duplicate rate, routing exceptions, or source-to-stage coverage. Pipeline outcomes are reported only when attribution is supportable.</p></details>
+          <details><summary>Are the integrations in this portfolio live?<span>＋</span></summary><p>No. The reference implementation uses mocked provider adapters and realistic event contracts. Production integrations require credentials, provider-specific validation, and a separate deployment scope.</p></details>
+          <details><summary>What happens when an automation fails?<span>＋</span></summary><p>Critical events are persisted before processing. Retries are idempotent, repeated failures can move to a dead-letter path, and the audit trail preserves what happened so an operator can recover safely.</p></details>
+        </div>
+      </section>
+
+      <section class="final-cta contact-cta" id="contact">
+        <div><p class="kicker light">Start with the workflow</p><h2>Bring the handoff your team keeps fixing by hand.</h2><p>Use the discovery brief to describe the trigger, current tools, decision rules, failure point, and outcome you need.</p><div class="cta-actions"><button class="button button-lime" id="copyBrief" type="button">Copy discovery brief <span>＋</span></button><a class="button button-outline-light" href="dashboard.html">Open interactive demo <span>↗</span></a></div><small class="copy-status" id="copyStatus" aria-live="polite"></small></div>
+        <div class="brief-preview"><span>DISCOVERY BRIEF</span><p><b>Trigger</b> What starts the workflow?</p><p><b>Inputs</b> Which tools and data are involved?</p><p><b>Decision</b> What rules determine the next step?</p><p><b>Failure</b> Where does the current process break?</p><p><b>Outcome</b> What observable change would make it useful?</p></div>
+      </section>
     </main>
-    <script>
-      const status = document.querySelector('#status'), sender = document.querySelector('#sender'), activity = document.querySelector('#activity'), message = document.querySelector('#message'), form = document.querySelector('#campaign-form'), send = document.querySelector('#send');
-      const render = (data) => { status.className = `status ${data.configured ? 'ready' : 'setup'}`; status.textContent = data.configured ? (data.dry_run ? 'Dry-run mode' : 'Gmail ready') : 'Gmail setup required'; sender.textContent = data.configured ? `Sender: ${data.sender}` : 'Set SMTP and owner-token environment variables before sending.'; activity.innerHTML = data.activity.length ? data.activity.map(item => `<li>${item.status}: ${item.recipients} recipient(s)<span>${item.subject} · ${item.timestamp}</span></li>`).join('') : '<li>Nothing triggered yet.</li>'; };
-      async function refresh() { render(await (await fetch('/api/status')).json()); }
-      form.addEventListener('submit', async (event) => { event.preventDefault(); send.disabled = true; message.className = ''; message.textContent = 'Triggering Gmail…'; const recipients = document.querySelector('#recipients').value.split(/[\n,]/).filter(Boolean); const response = await fetch('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': document.querySelector('#token').value }, body: JSON.stringify({ recipients, subject: document.querySelector('#subject').value, body: document.querySelector('#body').value }) }); const result = await response.json(); message.className = response.ok ? '' : 'error'; message.textContent = response.ok ? result.message : result.detail || 'Could not trigger Gmail.'; send.disabled = false; if (response.ok) { document.querySelector('#token').value = ''; await refresh(); } });
-      refresh().catch(() => { status.textContent = 'Service unavailable'; });
-    </script>
+    <footer><a class="site-brand footer-brand" href="index.html"><span class="site-brand-mark">S</span><span>SignalFlow</span></a><p>GTM engineering services and an inspectable reference implementation.</p><div><a href="#services">Services</a><a href="#work">Proof</a><a href="#build">Architecture</a><a href="dashboard.html">Interactive demo</a></div></footer>
+    <script src="landing.js"></script>
   </body>
 </html>
