@@ -21,6 +21,7 @@ from .services import can_transition_lead_stage, derive_account_enrichment, enri
 from .storage import get_bytes
 from .campaigns import audience_leads, classify_reply, schedule_enrollment
 from .gmail import access_token, decrypt_refresh_token, history, mailbox_profile, message as gmail_message, message_text, header, send_message
+from .integrations import verify_email_locally
 from .jobs import create_job, job_cancelled, update_job
 from .smtp_imap import messages_since as smtp_imap_messages_since, send as smtp_imap_send
 
@@ -70,6 +71,18 @@ def transition_imported_lead(db: Session, lead: Lead, target_stage: str) -> bool
     lead.stage = target_stage
     db.add(LeadDecision(lead_id=lead.id, kind="lifecycle", result={"from": previous_stage, "to": target_stage, "source": "import"}))
     return True
+
+
+def apply_local_verification(db: Session, lead: Lead, *, source: str) -> dict:
+    """Persist a safe, non-deliverability verification result and its evidence."""
+    result = verify_email_locally(lead.normalized_email or lead.email)
+    detail = {"status": result.status, "provider": result.provider, "reason": result.reason, "source": source}
+    lead.verification_status = result.status
+    lead.verification_provider = result.provider
+    lead.verification_detail = detail
+    lead.verified_at = utcnow()
+    db.add(LeadDecision(lead_id=lead.id, kind="verification", result=detail))
+    return detail
 
 
 def attach_import_audience(db: Session, record: Import) -> None:
@@ -149,7 +162,7 @@ def process_import(self, import_id: str) -> None:
         mapping = record.column_mapping or map_headers(headers)
         record.column_mapping = mapping
         seen_emails: set[str] = set()
-        counters = {"received": len(raw_rows), "accepted": 0, "rejected": 0, "duplicates_merged": 0, "manual_review": 0, "account_matched": 0, "fields_enriched": 0, "qualified": 0, "routed": 0, "ai_queued": 0, "suppressed": 0}
+        counters = {"received": len(raw_rows), "accepted": 0, "rejected": 0, "duplicates_merged": 0, "manual_review": 0, "account_matched": 0, "fields_enriched": 0, "qualified": 0, "routed": 0, "ai_queued": 0, "suppressed": 0, "verification_valid": 0, "verification_risky": 0, "verification_invalid": 0}
         for index, raw in enumerate(raw_rows, start=2):
             normalized = normalize_row(raw, mapping)
             row = ImportRow(import_id=record.id, row_number=index, raw_data=raw, normalized_data=normalized.data, errors=normalized.errors)
@@ -207,6 +220,18 @@ def process_import(self, import_id: str) -> None:
             db.add(LeadDecision(lead_id=lead.id, kind="score", result={"total": score, "qualification": qualification, "contributions": contributions, "enrichment_provider": enrichment["provider"]}))
             db.add(LeadDecision(lead_id=lead.id, kind="routing", result={"owner_id": lead.owner_id, "rationale": "Lowest current workload in default workspace pool" if owner else "No eligible owner"}))
             transition_imported_lead(db, lead, "enriched")
+            if lead.email:
+                transition_imported_lead(db, lead, "verifying")
+                verification = apply_local_verification(db, lead, source="import")
+                if verification["status"] == "invalid":
+                    transition_imported_lead(db, lead, "invalid")
+                    transition_imported_lead(db, lead, "disqualified")
+                    lead.qualification = "unqualified"; lead.next_action = "invalid_email"
+                    counters["verification_invalid"] += 1
+                else:
+                    transition_imported_lead(db, lead, "verified")
+                    lead.next_action = "verification_review"
+                    counters["verification_risky"] += 1
             audit(db, record.workspace_id, "lead.enriched", "lead", lead.id, enrichment, record.created_by)
             row.lead_id = lead.id; db.add(row)
             if normalized.data.get("source") == "apollo":

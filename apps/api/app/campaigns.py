@@ -18,7 +18,7 @@ def campaign_data(db: Session, campaign: Campaign) -> dict:
 def audience_leads(db: Session, campaign: Campaign) -> list[Lead]:
     filters = campaign.audience_filter or {}
     member_ids = [item.lead_id for item in db.query(CampaignAudienceMember).filter(CampaignAudienceMember.campaign_id == campaign.id, CampaignAudienceMember.selected.is_(True), CampaignAudienceMember.lead_id.is_not(None)).all()]
-    query = db.query(Lead).filter(Lead.workspace_id == campaign.workspace_id, Lead.email.is_not(None), Lead.qualification == "qualified")
+    query = db.query(Lead).filter(Lead.workspace_id == campaign.workspace_id, Lead.email.is_not(None), Lead.qualification == "qualified", Lead.verification_status == "valid")
     # New campaign-first workspaces only ever send to explicitly selected
     # audience members. Legacy campaigns keep their filter-based behaviour.
     if filters.get("campaign_first"):

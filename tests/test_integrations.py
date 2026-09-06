@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from app.integrations import apollo_people_csv, registry, public_connection
+from app.integrations import apollo_people_csv, registry, public_connection, verify_email_locally
 
 
 def test_registry_exposes_only_supported_provider_capabilities() -> None:
@@ -37,6 +37,12 @@ def test_apollo_people_are_converted_to_the_canonical_import_shape() -> None:
     assert "lumenhealth.example" in content
 
 
-def test_apollo_rows_keep_a_stable_person_identifier_for_repeat-import_dedupe() -> None:
+def test_apollo_rows_keep_a_stable_person_identifier_for_repeat_import_dedupe() -> None:
     content = apollo_people_csv([{"person_id": "apollo-person-2", "name": "Maya Chen"}]).decode()
     assert "apollo-person-2" in content
+
+
+def test_local_verification_never_claims_live_deliverability() -> None:
+    assert verify_email_locally("maya@company.test").status == "risky"
+    assert verify_email_locally("maya@mailinator.com").status == "invalid"
+    assert verify_email_locally(None).status == "not_available"

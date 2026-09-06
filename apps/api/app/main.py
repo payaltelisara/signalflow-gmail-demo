@@ -211,6 +211,12 @@ class LeadLifecycleInput(BaseModel):
     reason: str = Field(min_length=3, max_length=500)
 
 
+class VerificationReviewInput(BaseModel):
+    workspace_id: str
+    status: str = Field(pattern="^(valid|risky|invalid)$")
+    reason: str = Field(min_length=3, max_length=500)
+
+
 def csrf_protected(csrf_cookie: str | None = Cookie(default=None, alias=CSRF_COOKIE), x_csrf_token: str | None = Header(default=None)) -> None:
     verify_csrf(csrf_cookie, x_csrf_token)
 
@@ -533,7 +539,7 @@ def list_leads(workspace_id: str, qualification: str | None = None, next_action:
     if next_action: query = query.filter(Lead.next_action == next_action)
     if source: query = query.filter(Lead.source == source)
     rows = query.order_by(Lead.updated_at.desc()).offset(offset).limit(min(limit, 100)).all()
-    return [{"id": lead.id, "name": lead.full_name, "email": lead.email, "title": lead.title, "source": lead.source, "score": lead.score, "qualification": lead.qualification, "next_action": lead.next_action, "owner_id": lead.owner_id, "territory": lead.territory} for lead in rows]
+    return [{"id": lead.id, "name": lead.full_name, "email": lead.email, "title": lead.title, "source": lead.source, "stage": lead.stage, "verification_status": lead.verification_status, "verification_provider": lead.verification_provider, "score": lead.score, "qualification": lead.qualification, "next_action": lead.next_action, "owner_id": lead.owner_id, "territory": lead.territory} for lead in rows]
 
 
 @app.get("/api/v1/companies")
@@ -592,7 +598,7 @@ def lead_detail(lead_id: str, workspace_id: str, user: User = Depends(current_us
     workspace_membership(workspace_id, user, db)
     lead = db.get(Lead, lead_id)
     if not lead or lead.workspace_id != workspace_id: raise HTTPException(status_code=404, detail="Lead not found")
-    return {"lead": {"id": lead.id, "name": lead.full_name, "email": lead.email, "title": lead.title, "source": lead.source, "stage": lead.stage, "score": lead.score, "qualification": lead.qualification, "next_action": lead.next_action, "owner_id": lead.owner_id, "territory": lead.territory, "raw_data": lead.raw_data}, "decisions": [{"kind": item.kind, "result": item.result, "version": item.version, "created_at": item.created_at} for item in db.query(LeadDecision).filter(LeadDecision.lead_id == lead_id).order_by(LeadDecision.created_at.desc()).all()], "ai_suggestions": [{"id": item.id, "status": item.status, "model": item.model, "output": item.output, "reviewer_status": item.reviewer_status, "error_message": item.error_message} for item in db.query(AiSuggestion).filter(AiSuggestion.lead_id == lead_id).all()], "outreach_drafts": [outreach_draft_data(item) for item in db.query(OutreachDraft).filter(OutreachDraft.lead_id == lead_id).order_by(OutreachDraft.version.desc()).all()], "events": [{"action": item.action, "payload": item.payload, "created_at": item.created_at} for item in db.query(AuditLog).filter(AuditLog.workspace_id == workspace_id, AuditLog.resource_id == lead_id).order_by(AuditLog.created_at.desc()).all()]}
+    return {"lead": {"id": lead.id, "name": lead.full_name, "email": lead.email, "title": lead.title, "source": lead.source, "stage": lead.stage, "verification_status": lead.verification_status, "verification_provider": lead.verification_provider, "verification_detail": lead.verification_detail or {}, "verified_at": lead.verified_at, "score": lead.score, "qualification": lead.qualification, "next_action": lead.next_action, "owner_id": lead.owner_id, "territory": lead.territory, "raw_data": lead.raw_data}, "decisions": [{"kind": item.kind, "result": item.result, "version": item.version, "created_at": item.created_at} for item in db.query(LeadDecision).filter(LeadDecision.lead_id == lead_id).order_by(LeadDecision.created_at.desc()).all()], "ai_suggestions": [{"id": item.id, "status": item.status, "model": item.model, "output": item.output, "reviewer_status": item.reviewer_status, "error_message": item.error_message} for item in db.query(AiSuggestion).filter(AiSuggestion.lead_id == lead_id).all()], "outreach_drafts": [outreach_draft_data(item) for item in db.query(OutreachDraft).filter(OutreachDraft.lead_id == lead_id).order_by(OutreachDraft.version.desc()).all()], "events": [{"action": item.action, "payload": item.payload, "created_at": item.created_at} for item in db.query(AuditLog).filter(AuditLog.workspace_id == workspace_id, AuditLog.resource_id == lead_id).order_by(AuditLog.created_at.desc()).all()]}
 
 
 def outreach_draft_data(draft: OutreachDraft) -> dict:
@@ -651,6 +657,33 @@ def transition_lead_lifecycle(lead_id: str, payload: LeadLifecycleInput, user: U
     audit(db, payload.workspace_id, "lead.lifecycle_transitioned", "lead", lead.id, transition, user.id)
     db.commit()
     return {"id": lead.id, "stage": lead.stage, "transition": transition}
+
+
+@app.post("/api/v1/leads/{lead_id}/verification/review", dependencies=[Depends(csrf_protected)])
+def review_lead_verification(lead_id: str, payload: VerificationReviewInput, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    membership = workspace_membership(payload.workspace_id, user, db); require_roles(membership, "admin", "manager")
+    lead = db.get(Lead, lead_id)
+    if not lead or lead.workspace_id != payload.workspace_id:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    if not lead.email:
+        raise HTTPException(status_code=409, detail="A recipient email is required before verification can be reviewed")
+    previous = lead.verification_status
+    detail = {"status": payload.status, "provider": "manual_review", "reason": payload.reason, "source": "human_review", "previous_status": previous}
+    lead.verification_status = payload.status; lead.verification_provider = "manual_review"; lead.verification_detail = detail; lead.verified_at = utcnow()
+    if payload.status == "invalid":
+        if lead.stage == "verified":
+            lead.stage = "invalid"
+        if can_transition_lead_stage(lead.stage, "disqualified"):
+            lead.stage = "disqualified"
+        lead.qualification = "unqualified"; lead.next_action = "invalid_email"
+    elif lead.stage == "verifying":
+        lead.stage = "verified"
+    elif payload.status == "valid" and lead.next_action == "verification_review":
+        lead.next_action = "ready_for_follow_up" if lead.owner_id and lead.qualification == "qualified" else "manual_routing_review" if lead.qualification == "qualified" else lead.next_action
+    db.add(LeadDecision(lead_id=lead.id, kind="verification", result=detail))
+    audit(db, payload.workspace_id, "lead.verification_reviewed", "lead", lead.id, detail, user.id)
+    db.commit()
+    return {"id": lead.id, "verification_status": lead.verification_status, "stage": lead.stage, "next_action": lead.next_action}
 
 
 @app.post("/api/v1/leads/{lead_id}/ai-retry", dependencies=[Depends(csrf_protected)])

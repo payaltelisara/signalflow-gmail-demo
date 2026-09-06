@@ -16,6 +16,8 @@ import httpx
 from .gmail import GmailConfigurationError, decrypt_refresh_token
 
 APOLLO_API_BASE = "https://api.apollo.io/api/v1"
+DISPOSABLE_EMAIL_DOMAINS = {"mailinator.com", "guerrillamail.com", "tempmail.com", "yopmail.com"}
+PUBLIC_EMAIL_DOMAINS = {"gmail.com", "googlemail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "proton.me", "protonmail.com"}
 
 
 @dataclass(frozen=True)
@@ -76,6 +78,32 @@ registry = IntegrationRegistry((
 
 class ApolloConfigurationError(ValueError):
     pass
+
+
+@dataclass(frozen=True)
+class EmailVerificationResult:
+    """A provider-neutral verification result.
+
+    The built-in verifier deliberately makes no deliverability claim: it only
+    detects clearly unsafe addresses and marks otherwise syntactically valid
+    contacts as risky until a human or a configured provider confirms them.
+    """
+
+    status: str
+    provider: str
+    reason: str
+
+
+def verify_email_locally(email: str | None) -> EmailVerificationResult:
+    value = str(email or "").strip().lower()
+    if not value or "@" not in value:
+        return EmailVerificationResult("not_available", "local_syntax", "No normalized recipient email is available.")
+    domain = value.rsplit("@", 1)[1]
+    if domain in DISPOSABLE_EMAIL_DOMAINS or domain.endswith(".example"):
+        return EmailVerificationResult("invalid", "local_syntax", "Disposable or reserved email domain.")
+    if domain in PUBLIC_EMAIL_DOMAINS:
+        return EmailVerificationResult("risky", "local_syntax", "Public mailbox domain; require a human verification decision.")
+    return EmailVerificationResult("risky", "local_syntax", "Syntax is valid, but live deliverability has not been verified.")
 
 
 def apollo_api_key(connection: object, settings: object) -> str:
