@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: signalflow-gmail-demo
+    runtime: python
+    plan: free
+    rootDir: showcase
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SHOWCASE_ADMIN_TOKEN
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USE_SSL
+        value: "false"
+      - key: SMTP_DRY_RUN
+        value: "true"

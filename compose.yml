@@ -1,0 +1,90 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_DB: signalflow
+      POSTGRES_USER: signalflow
+      POSTGRES_PASSWORD: signalflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U signalflow -d signalflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: quay.io/minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-signalflow}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-signalflow-local-only}
+    volumes:
+      - minio_data:/data
+
+  api:
+    build: ./apps/api
+    env_file: .env
+    volumes:
+      - ./migrations:/app/migrations:Z
+      - ./alembic.ini:/app/alembic.ini:Z
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  worker:
+    build: ./apps/api
+    env_file: .env
+    command: celery -A app.celery_app.celery worker --loglevel=INFO -Q imports,ai
+    depends_on:
+      api:
+        condition: service_started
+
+  outbox:
+    build: ./apps/api
+    env_file: .env
+    command: celery -A app.celery_app.celery beat --loglevel=INFO --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      api:
+        condition: service_started
+
+  web:
+    build:
+      context: ./apps/web
+    volumes:
+      - ./apps/web:/app:Z
+      - web_node_modules:/app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+  caddy:
+    image: docker.io/library/caddy:2-alpine
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro,Z
+      - ./:/srv/landing:ro,Z
+    depends_on:
+      - api
+      - web
+
+  clamav:
+    image: docker.io/clamav/clamav:stable
+    profiles: ["production-scan"]
+
+volumes:
+  postgres_data:
+  minio_data:
+  web_node_modules:
