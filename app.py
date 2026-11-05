@@ -8,6 +8,7 @@ from collections import deque
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
@@ -18,7 +19,7 @@ ROOT = Path(__file__).parent
 MAX_RECIPIENTS = 20
 activity: deque[dict[str, str | int]] = deque(maxlen=12)
 
-app = FastAPI(title="SignalFlow Gmail campaign demo")
+app = FastAPI(title="SignalFlow outbound workspace demo")
 
 
 class CampaignRequest(BaseModel):
@@ -62,7 +63,7 @@ def status() -> dict[str, object]:
 
 
 @app.post("/api/send")
-def send_campaign(payload: CampaignRequest, x_admin_token: str | None = Header(default=None)) -> dict[str, object]:
+def send_campaign(payload: CampaignRequest, x_admin_token: Optional[str] = Header(default=None)) -> dict[str, object]:
     admin_token = setting("SHOWCASE_ADMIN_TOKEN")
     if not admin_token or not x_admin_token or not secrets.compare_digest(admin_token, x_admin_token):
         raise HTTPException(status_code=401, detail="Enter the campaign owner token to send email.")
