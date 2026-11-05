@@ -1,0 +1,1 @@
+{"root":["./src/api.test.ts","./src/api.ts","./src/main.tsx","./src/components/ui.tsx","./src/features/campaigns/CampaignsView.tsx","./src/features/gmail/IntegrationsView.tsx","./src/features/jobs/JobsView.tsx"],"version":"5.9.3"}

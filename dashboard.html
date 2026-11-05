@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Interactive SignalFlow revenue operations dashboard demo." />
+    <title>SignalFlow | Live product demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="dashboard-redesign.css?v=campaign-layout-4" />
+    <style>.home-link{display:inline-flex;align-items:center;text-decoration:none}.header-actions .secondary-btn{height:38px}@media(max-width:700px){.home-link{display:none}}</style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="index.html" aria-label="SignalFlow home"><span class="brand-mark">S</span><span>SignalFlow</span></a>
+      <button class="workspace" id="workspaceSwitcher" type="button" aria-expanded="false"><span class="avatar">NH</span><span>Northstar Health</span><span class="chevron">⌄</span></button>
+      <nav>
+        <a class="nav-item active" href="#overview" data-view="overview"><span>⊞</span> Overview</a>
+        <a class="nav-item" href="#leads" data-view="leads"><span>◉</span> Leads <b id="leadCount">12</b></a>
+        <a class="nav-item" href="#pipeline" data-view="pipeline"><span>◫</span> Pipeline</a>
+        <a class="nav-item" href="#campaigns" data-view="campaigns"><span>↗</span> Campaigns</a>
+        <a class="nav-item" href="#insights" data-view="insights"><span>⌁</span> Insights</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="integration"><i class="green-dot"></i> All systems operational</div>
+        <a class="nav-item" href="#settings" data-view="settings"><span>⚙</span> Settings</a>
+        <button class="user" id="userMenu" type="button"><span class="avatar user-avatar">PL</span><span><strong>Payal</strong><small>Revenue admin</small></span><span>⋮</span></button>
+      </div>
+    </aside>
+    <main>
+      <header><div><p class="eyebrow">Monday, August 24</p><h1 id="pageTitle">Good morning, Payal.</h1><p class="subhead" id="pageSubtitle">Here is what needs attention in your pipeline.</p></div><div class="header-actions"><a class="secondary-btn home-link" href="index.html">← Product site</a><button class="icon-btn" id="notifications" type="button" aria-label="Notifications">♢<i></i></button><button class="primary-btn" id="newLead" type="button">+ Add lead</button></div></header>
+      <section class="view-context" id="viewContext" aria-live="polite" hidden></section>
+      <section class="campaign-view" id="campaignView" aria-labelledby="campaignHeading" hidden>
+        <div class="campaign-disclaimer"><strong>Public demo</strong><span>All campaign, enrichment, and AI research data is simulated. Email delivery is disabled.</span></div>
+        <div class="campaign-metrics" aria-label="Campaign metrics">
+          <article><span>Active campaigns</span><strong id="activeCampaignCount">2</strong><small>Across 60 prospects</small></article>
+          <article><span>Delivered</span><strong>1,284</strong><small>98.7% modeled deliverability</small></article>
+          <article><span>Reply rate</span><strong>12.4%</strong><small>24 replies this week</small></article>
+          <article><span>Meetings booked</span><strong>19</strong><small>5 more than last week</small></article>
+        </div>
+        <div class="campaign-layout">
+          <section class="panel campaign-list-panel"><div class="panel-heading"><div><h2 id="campaignHeading">Cold-email campaigns</h2><p>Click a campaign to review its modeled performance.</p></div><button class="text-btn" id="newCampaign" type="button">+ New campaign</button></div><div id="campaignList"></div></section>
+          <aside class="campaign-side">
+            <section class="panel campaign-detail" id="campaignDetail" aria-live="polite"></section>
+            <section class="panel test-send-panel"><div class="panel-heading"><div><h2>Test email</h2><p>Simulated delivery only</p></div></div><form id="testEmailForm" novalidate><label>Recipient<input id="testRecipient" type="email" placeholder="you@example.com" required></label><label>Subject<input id="testSubject" type="text" value="A quick idea for your revenue team" required></label><label>Preview<textarea id="testPreview" rows="3">Hi there, I mapped a few ways your team could improve lead response speed.</textarea></label><button class="primary-btn" id="sendTest" type="submit">Send test email</button><p class="test-status" id="testStatus" aria-live="polite"></p></form></section>
+          </aside>
+        </div>
+        <section class="gtm-workspace" aria-label="GTM intelligence workspace">
+          <section class="panel"><div class="panel-heading"><div><h2>ICP signal</h2><p>Modeled fit criteria for Northstar Health.</p></div><button class="text-btn" id="editIcp" type="button">Edit ICP</button></div><div class="icp-grid"><div><span>Company</span><b>50 to 500 employees</b></div><div><span>Industry</span><b>B2B SaaS · Healthtech</b></div><div><span>Buyer</span><b>VP Revenue · Growth</b></div><div><span>Trigger</span><b>Hiring or new funding</b></div></div></section>
+          <section class="panel"><div class="panel-heading"><div><h2>Enrichment flow</h2><p>Sample enrichment queue for priority prospects.</p></div><button class="text-btn" id="runEnrichment" type="button">Run enrichment</button></div><div class="enrichment-row"><span class="status-dot ready"></span><div><b>Company firmographics</b><small>42 of 42 prospects enriched</small></div><span>Ready</span></div><div class="enrichment-row"><span class="status-dot pending"></span><div><b>Buying signals</b><small>6 prospects queued for refresh</small></div><span id="enrichmentState">Queued</span></div></section>
+          <section class="panel"><div class="panel-heading"><div><h2>AI research queue</h2><p>Evidence-bound research from sample lead data.</p></div><button class="text-btn" id="runResearch" type="button">Run research</button></div><div id="researchList"></div></section>
+        </section>
+        <section class="panel ai-draft-panel" aria-labelledby="aiDraftHeading">
+          <div class="panel-heading"><div><h2 id="aiDraftHeading">AI email draft</h2><p>Personalized from simulated lead research and campaign context.</p></div><button class="text-btn" type="button" onclick="document.getElementById('aiDraftStatus').textContent='Draft marked ready for your review.'">Mark ready</button></div>
+          <div class="draft-context"><span>Target: Jordan Blake</span><span>Signal: pricing engagement</span><span>Campaign: EMEA revenue leaders</span></div>
+          <form class="draft-form" oninput="document.getElementById('aiDraftStatus').textContent='Edits are saved in this browser tab only.'"><label for="draftSubject">Subject</label><input id="draftSubject" class="draft-subject" type="text" value="A quick idea for Orbitly's next growth sprint"><label for="draftBody">Message</label><textarea id="draftBody" rows="8">Hi Jordan,
+
+I noticed Orbitly's team has been engaging with pricing content while your growth motion is expanding. SignalFlow helps revenue teams turn those signals into evidence-backed outreach without losing the review step.
+
+Would a 15-minute walkthrough next week be useful?
+
+Best,
+Payal</textarea></form>
+          <p class="test-status" id="aiDraftStatus" aria-live="polite">Simulated draft only. No AI service or email delivery is used.</p>
+        </section>
+      </section>
+      <section class="metrics" aria-label="Revenue metrics">
+        <article><div class="metric-label">New leads <span class="trend up">↑ 18.4%</span></div><strong>128</strong><p>vs. 108 last week</p><div class="spark teal"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
+        <article><div class="metric-label">Qualified leads <span class="trend up">↑ 7.2%</span></div><strong>46</strong><p>35.9% qualification rate</p><div class="spark purple"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
+        <article><div class="metric-label">Meetings booked <span class="trend up">↑ 12.0%</span></div><strong>19</strong><p>14 this time last week</p><div class="spark coral"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
+        <article><div class="metric-label">Pipeline influenced <span class="trend up">↑ 9.1%</span></div><strong>$84.2k</strong><p>Across 31 open opportunities</p><div class="spark blue"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
+      </section>
+      <section class="content-grid">
+        <section class="panel lead-panel" id="leads"><div class="panel-heading"><div><h2>Priority leads</h2><p>Sorted by fit and buying intent</p></div><button class="text-btn" id="viewAll" type="button">View all <span>→</span></button></div><div class="lead-filters"><button class="filter active" data-filter="all" type="button">All <span>12</span></button><button class="filter" data-filter="needs" type="button">Needs action <span>4</span></button><button class="filter" data-filter="hot" type="button">High intent <span>3</span></button></div><div class="lead-list" id="leadList"></div></section>
+        <aside class="right-column">
+          <section class="panel activity"><div class="panel-heading"><div><h2>Live activity</h2><p>Events from the last 2 hours</p></div><span class="live"><i></i> Live</span></div><div id="activityList"></div></section>
+          <section class="panel sources"><div class="panel-heading"><div><h2>Lead sources</h2><button class="text-btn" id="sourceReport" type="button">Report →</button></div></div><div class="source-chart"><div class="donut"><span>128<small>leads</small></span></div><div class="legend"><p><i class="dot teal-dot"></i>Website <b>42%</b></p><p><i class="dot purple-dot"></i>Outbound <b>28%</b></p><p><i class="dot coral-dot"></i>Partners <b>18%</b></p><p><i class="dot gray-dot"></i>Other <b>12%</b></p></div></div></section>
+        </aside>
+      </section>
+    </main>
+    <dialog id="leadDialog"><form method="dialog"><button class="dialog-close">×</button><p class="eyebrow">Lead details</p><div id="dialogContent"></div><menu><button value="cancel" class="secondary-btn">Close</button><button value="default" class="primary-btn" id="advanceLead">Advance stage</button></menu></form></dialog>
+    <div class="toast" id="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
